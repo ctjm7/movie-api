@@ -3,8 +3,16 @@ const bodyParser = require('body-parser');
   morgan = require('morgan');
   uuid = require('uuid');
   app = express();
+  mongoose = require('mongoose');
+  Models = require('./models.js');
+
+const Movies = Models.Movie;
+  Users = Models.User
+
+mongoose.connect('mongodb://localhost:27017/moviesDB', { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
@@ -15,172 +23,184 @@ app.use((err, req, res, next) => {
   res.status(500).send('Error');
 });
 
-let users = [
-  {
-    "id": 1,
-    "name": "Mary",
-    "favoriteMovies": []
+//Add a user
+/* We’ll expect JSON in this format
+{
+  ID: Integer,
+  Username: String,
+  Password: String,
+  Email: String,
+  Birthday: Date
+}*/
+app.post('/users', (req, res) => {
+  Users.findOne({ Username: req.body.Username })
+    .then((user) => {
+      if (user) {
+        return res.status(400).send(req.body.Username + 'already exists');
+      } else {
+        Users
+          .create({
+            Username: req.body.Username,
+            Password: req.body.Password,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday
+          })
+          .then((user) =>{res.status(201).json(user) })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).send('Error: ' + error);
+        })
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
+});
+
+// Get user by username
+app.get('/users/:Username', (req, res) => {
+  Users.findOne({ Username: req.params.Username })
+    .then((user) => {
+      res.status(201).json(user);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
+});
+
+// Update a user's info, by username
+/* We’ll expect JSON in this format
+{
+  Username: String, (required)
+  Password: String, (required)
+  Email: String, (required)
+  Birthday: Date
+}*/
+app.put('/users/:Username', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
+    {
+      Username: req.body.Username,
+      Password: req.body.Password,
+      Email: req.body.Email,
+      Birthday: req.body.Birthday
+    }
   },
-  {
-    "id": 2,
-    "name": "Joe",
-    "favortieMovies": [
-      "Pride and Prejudice"
-  ]
+  { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if(err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.status(201).json(updatedUser);
+    }
+  });
+});
+
+// Add a movie to a user's list of favorites
+app.post('/users/:Username/movies/:MovieID', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, {
+     $push: { FavoriteMovies: req.params.MovieID }
+   },
+   { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.status(201).json(updatedUser);
+    }
+  });
+});
+
+// Remove a movie from user's favorite movie list
+app.delete('/users/:Username/movies/:MovieID',(req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username}, {
+    $pull: { FavoriteMovies: req.params.MovieID }
   },
-  {
-    "id": 3,
-    "name": "Bob",
-    "favoriteMovies": []
-  }
-];
-
-let movies = [
-  {
-    "Title":"When Harry Met Sally",
-     "Description":"Harry and Sally have known each other for years, and are very good friends, but they fear sex would ruin the friendship.",
-     "Genre": {
-       "Name":"Comedy"
-     },
-     "Director": {
-       "Name":"Rob Reiner",
-       "Bio":"Robert Reiner was born in New York City, to Estelle Reiner (née Lebost) and Emmy-winning actor, comedian, writer, and producer Carl Reiner.In 1987, with these successful box-office movies under his belt, Reiner founded his own production company, Castle Rock Entertainment; along with Martin Shafer, Andrew Scheinman, Glenn Padnick, and Alan Horn. Under Castle Rock Entertainment, he went to direct Oscar-nominated films When Harry Met Sally, Misery, and A Few Good Men. Reiner has credited former co-star Carroll O'Connor in helping him get into the directing business, showing Reiner the ropes."
-     },
-     "ImageURL":"https://www.imdb.com/title/tt0098635/mediaviewer/rm1579924224/?ref_=tt_ov_i",
-     "Year":"1989"
-  },
-  {
-    "Title":"The Philadelphia Story",
-    "Description":"When a rich woman's ex-husband and a tabloid-type reporter turn up just before her planned remarriage, she begins to learn the truth about herself.",
-     "Genre": {
-       "Name":"Comedy"
-     },
-     "Director": {
-       "Name":"George Cukor",
-       "Bio":"George Cukor was an American film director of Hungarian-Jewish descent, better known for directing comedies and literary adaptations. He once won the Academy Award for Best Director, and was nominated other four times for the same Award."
-     },
-     "ImageURL":"https://www.imdb.com/title/tt0032904/mediaviewer/rm3239186176/?ref_=tt_ov_i",
-     "Year":"1940"
-  },
-  {
-    "Title":"Pride and Predjudice",
-    "Description":"Sparks fly when spirited Elizabeth Bennet meets single, rich, and proud Mr. Darcy. But Mr. Darcy reluctantly finds himself falling in love with a woman beneath his class. Can each overcome their own pride and prejudice?",
-     "Genre": {
-       "Name":"Drama"
-     },
-     "Director": {
-       "Name":"Joe Wright",
-       "Bio":"Joe Wright is an English film director. He is best known for Pride & Prejudice (2005), Atonement (2007), Anna Karenina (2012), and Darkest Hour (2017)."
-     },
-     "ImageURL":"https://www.imdb.com/title/tt0414387/mediaviewer/rm1343528192/?ref_=tt_ov_i",
-     "Year":"2005"
-  }
-];
-
-app.post('/users',(req, res) => {
-  const newUser = req.body;
-
-  if (newUser.name) {
-    newUser.id = uuid.v4();
-    users.push(newUser);
-    res.status(201).json(newUser);
-  }
-  else {
-    res.status(400).send('user needs name');
-  }
+  { new: true },
+  (err, updatedUser) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.status(201).json(updatedUser);
+    }
+  });
 });
 
-app.put('/users/:id',(req, res) => {
-  const {id} = req.params;
-  const updatedUser = req.body;
-  let user = users.find(user => user.id == id);
-
-  if (user) {
-    user.name = updatedUser.name;
-    res.status(200).json(user);
-  }
-  else {
-    res.status(400).send('user not found');
-  }
+// Delete a user by username
+app.delete('/users/:Username', (req, res) => {
+  Users.findOneAndRemove({ Username: req.params.Username })
+    .then((user) => {
+      if (!user) {
+        res.status(400).send(req.params.Username + ' was not found');
+      } else {
+        res.status(201).send(req.params.Username + ' was deleted');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-app.post('/users/:id/:movieTitle',(req, res) => {
-  const {id, movieTitle} = req.params;
-  let user = users.find(user => user.id == id);
-
-  if (user) {
-    user.favoriteMovies.push(movieTitle);
-    res.status(200).send(`${movieTitle} has been added to user ${id}`);
-  }
-  else {
-    res.status(400).send('user not found');
-  }
-});
-
-app.delete('/users/:id/:movieTitle',(req, res) => {
-  const {id, movieTitle} = req.params;
-  let user = users.find(user => user.id == id);
-
-  if (user) {
-    user.favoriteMovies = user.favoriteMovies.filter(title => title !== movieTitle);
-    res.status(200).send(`${movieTitle} has been removed from user ${id}`);
-  }
-  else {
-    res.status(400).send('user not found');
-  }
-});
-
-app.delete('/users/:id',(req, res) => {
-  const {id} = req.params;
-  let user = users.find(user => user.id == id);
-
-  if (user) {
-    users = users.filter(user => user.id != id);
-    res.status(200).send(`user ${id} has been deleted`);
-  }
-  else {
-    res.status(400).send('user not found');
-  }
-});
-
+// Get all movies
 app.get('/movies', (req, res) => {
-  res.status(200).json(movies);
+  Movies.find()
+    .then((movies) => {
+      res.status(201).json(movies);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-app.get('/movies/:title', (req, res) => {
-  const {title} = req.params;
-  const movie = movies.find(movie => movie.Title === title);
-
-  if (movie) {
-    res.status(200).json(movie);
-  }
-  else {
-    res.status(400).send('movie not found');
-  }
+// Get one movie by title
+app.get('/movies/:Title', (req, res) => {
+  Movies.findOne({ Title: req.params.Title })
+  .then((movie) => {
+    if (!movie) {
+      res.status(400).send(req.params.Title + ' was not found');
+    } else {
+      res.status(201).json(movie);
+    }
+  })
+  .catch((err) => {
+    res.status(500).send('Error: ' + err);
+  });
 });
 
-app.get('/movies/genre/:genreName', (req, res) => {
-  const {genreName} = req.params;
-  const genre = movies.find(movie => movie.Genre.Name === genreName).Genre;
-
-  if (genre) {
-    res.status(200).json(genre);
-  }
-  else {
-    res.status(400).send('genre not found');
-  }
+// Get genre and description
+app.get('/movies/genre/:Genre', (req, res) => {
+  Movies.findOne({ 'Genre.Name': req.params.Genre })
+  .then((genre) => {
+    if (!genre) {
+      res.status(400).send(req.params.Genre + ' was not found');
+    } else {
+      res.status(201).json(genre.Genre);
+    }
+  })
+  .catch((err) => {
+    res.status(500).send('Error: ' + err);
+  });
 });
 
-app.get('/movies/directors/:directorName', (req, res) => {
-  const {directorName} = req.params;
-  const director = movies.find(movie => movie.Director.Name === directorName).Director;
-
-  if (director) {
-    res.status(200).json(director);
-  }
-  else {
-    res.status(400).send('director not found');
-  }
+// Get director and bio
+app.get('/movies/directors/:Director', (req, res) => {
+  Movies.findOne({ 'Director.Name': req.params.Director })
+  .then((directors) => {
+    if (!directors) {
+      res.status(400).send(req.params.Director + ' was not found');
+    } else {
+      res.status(201).json(directors.Director);
+    }
+  })
+  .catch((err) => {
+    res.status(500).send('Error: ' + err);
+  });
 });
 
 app.listen(8080, () => {
