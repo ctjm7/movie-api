@@ -24,9 +24,9 @@
     <div class="movie_data">
       <h2>Retrieve Movie Data</h2>
         <p><strong>Description: </strong>This endpoint retrieves a movie with corresponding data including description, director, genre, and image as a JSON object.</p>
-        <p><strong>Endpoint URL: </strong>/movies/:movieTitle</p>
+        <p><strong>Endpoint URL: </strong>/movies/:Title</p>
         <p><strong>METHOD Type: </strong>GET</p>
-        <p><strong>Query Parameters: </strong>:movieTitle</p>
+        <p><strong>Query Parameters: </strong>:Title</p>
         <p><strong>Request Body Format: </strong>None</p>
         <p><strong>Response Body Format: </strong>JSON object with movie and corresponding information</p>
     </div>
@@ -34,9 +34,10 @@
     <div class="movie_genre">
       <h2>Retrieve a Genre</h2>
         <p><strong>Description: </strong>This endpoint retrieves a genre with description as a JSON object.</p>
-        <p><strong>Endpoint URL: </strong>/movies/genre/:genreName</p>
+        <p><strong>Endpoint URL: </strong>/movies/genre/:Name</p>
         <p><strong>METHOD Type: </strong>GET</p>
-        <p><strong>Query Parameters: </strong>:genreName</p>
+        <p><strong>Query Parameters: </strong>:Name</p>
+        <p><strong>Example: /movies/genre/Comedy</strong></p>
         <p><strong>Request Body Format: </strong>None</p>
         <p><strong>Response Body Format: </strong>JSON object with genre and corresponding information</p>
     </div>
@@ -44,9 +45,10 @@
     <div class="movie_director">
       <h2>Retrieve a Director</h2>
         <p><strong>Description: </strong>This endpoint retrieves a director and biography as a JSON object.</p>
-        <p><strong>Endpoint URL: </strong>/movies/directors/:directorName</p>
+        <p><strong>Endpoint URL: </strong>/movies/directors/:Name</p>
         <p><strong>METHOD Type: </strong>GET</p>
-        <p><strong>Query Parameters: </strong>:directorName</p>
+        <p><strong>Query Parameters: </strong>:Name</p>
+        <p><strong>Example: /movies/directors/Rob%20Reiner</strong></p>
         <p><strong>Request Body Format: </strong>None</p>
         <p><strong>Response Body Format: </strong>JSON object with director and corresponding information</p>
     </div>
@@ -57,97 +59,124 @@
         <p><strong>Endpoint URL: </strong>/users</p>
         <p><strong>METHOD Type: </strong>POST</p>
         <p><strong>Query Parameters: </strong>None</p>
-        <p><strong>Request Body Format: </strong>JSON object with "name" required</p>
+        <p><strong>Request Body Format: </strong>JSON object with username, password, and email required</p>
         <p><strong>Example: </strong></p>
           <code class="code">
             {<br>
-              "name": "Laura"<br>
+              "Username": "Joe",<br>
+              "Password": "toocool",<br>
+              "Email": "jj@gmail.com",<br>
+              "Birthday": new Date("1990-09-21"),<br>
             }
           </code>
         <p><strong>Response Body Format: </strong>JSON object with user information being stored</p>
         <p><strong>Example: </strong></p>
           <code class="code">
             {<br>
-              "name": "Laura",<br>
-              "favoriteMovies": [],<br>
-              "id": "4cb13c06-7b5a-48f2-8ae5-b7e8861dd544"<br>
+              "_id": "63042df019706ddd090db11d",
+              "Username": "Joe",
+              "Password": "toocool",
+              "Email": "jj@gmail.com",
+              "Birthday": "1990-09-21",
+              "FavoriteMovies": []
             }
           </code>
         <p><strong>Response Status Codes: </strong></p>
         <p>201: JSON object with user information</p>
-        <p>400: user needs name</p>
+        <p>400: Text response (:Username already exists)</p>
+        <p>500: 'Error'</p>
     </div>
 
     <div class="update_user">
       <h2>Update User Information</h2>
-        <p><strong>Description: </strong>This endpoint updates the user information and returns a JSON object with user name and information along with an automatic generated id.</p>
-        <p><strong>Endpoint URL: </strong>/users/:id</p>
+        <p><strong>Description: </strong>This endpoint updates the user information and returns a JSON object with username and information.</p>
+        <p><strong>Endpoint URL: </strong>/users/:Username</p>
         <p><strong>METHOD Type: </strong>PUT</p>
-        <p><strong>Query Parameters: </strong>:id</p>
-        <p><strong>Request Body Format: </strong>JSON object with new user information</p>
+        <p><strong>Query Parameters: </strong>:Username</p>
+        <p><strong>Request Body Format: </strong>JSON object with new user information with username required</p>
         <p><strong>Example: </strong></p>
           <code class="code">
             {<br>
-              "name": "Hannah"<br>
+              "Username": "Herb",<br>
+              "Email": "hrby@gmail.com"<br>
             }
           </code>
         <p><strong>Response Body Format: </strong>JSON object with updated user information</p>
         <p><strong>Example: </strong></p>
           <code class="code">
             {<br>
-              "id": 1,<br>
-              "name": "Hannah",<br>
-              "favoriteMovies": []<br>
+              "_id": "63042df019706ddd090db11d",
+              "Username": "Herb",<br>
+              "Password": "yty99",<br>
+              "Email": "hrby@gmail.com",<br>
+              "FavoriteMovies": []<br>
             }
           </code>
         <p><strong>Response Status Codes: </strong></p>
         <p>201: JSON object with user information</p>
-        <p>400: user not found</p>
+        <p>500: 'Error'</p>
     </div>
 
     <div class="add_favorite_movie">
       <h2>Add a Movie to Favorites List</h2>
-        <p><strong>Description: </strong>This endpoint adds a movie to the user's favoirite movie list. It returns a text response with movie title and user id.</p>
-        <p><strong>Endpoint URL: </strong>/users/:id/:movieTitle</p>
+        <p><strong>Description: </strong>This endpoint adds a movie to the user's favorite movie list. It returns a JSON object with the updated user information.</p>
+        <p><strong>Endpoint URL: </strong>/users/:Username/movies/:MovieID</p>
         <p><strong>METHOD Type: </strong>POST</p>
-        <p><strong>Query Parameters: </strong>:id, :movieTitle</p>
-        <p><strong>Example: </strong>/users/2/New%20Movie</p>
+        <p><strong>Query Parameters: </strong>:Username, :MovieID</p>
+        <p><strong>Example: </strong>/users/Herb/movies/63012c7f5fd67ec6a36255de</p>
         <p><strong>Request Body Format: </strong>None</p>
-        <p><strong>Response Body Format: </strong>Text with movie and user id</p>
-        <p><strong>Example: </strong>New Movie has been added to user 2</p>
+        <p><strong>Response Body Format: </strong>JSON object with updated user information</p>
+        <p><strong>Example: </strong>
+          <code class="code"></code>
+          {<br>
+            "_id": "63042df019706ddd090db11d",<br>
+            "Username": "Herb",<br>
+            "Password": "yty99",<br>
+            "Email": "hrby@gmail.com",<br>
+            "FavoriteMovies": ["63012c7f5fd67ec6a36255de"]<br>
+        }
         <p><strong>Response Status Codes: </strong></p>
-        <p>201: generated text response</p>
-        <p>400: user not found</p>
+        <p>201: JSON with updated user information</p>
+        <p>500: 'Error'</p>
     </div>
 
     <div class="delete_favorite_movie">
       <h2>Delete a Movie from Favorites List</h2>
-        <p><strong>Description: </strong>This endpoint deletes a movie from the user's favoirite movie list. It returns a text response with movie title and user id.</p>
-        <p><strong>Endpoint URL: </strong>/users/:id/:movieTitle</p>
+        <p><strong>Description: </strong>This endpoint deletes a movie from the user's favorite movie list. It returns a JSON object.</p>
+        <p><strong>Endpoint URL: </strong>/users/:Username/movies/:MovieID</p>
         <p><strong>METHOD Type: </strong>DELETE</p>
-        <p><strong>Query Parameters: </strong>:id, :movieTitle</p>
-        <p><strong>Example: </strong>/users/2/New%20Movie</p>
+        <p><strong>Query Parameters: </strong>:Username, :MovieID</p>
+        <p><strong>Example: </strong>/users/Herb/movies/63012c7f5fd67ec6a36255de</p>
         <p><strong>Request Body Format: </strong>None</p>
-        <p><strong>Response Body Format: </strong>Text with movie and user id</p>
-        <p><strong>Example: </strong>New Movie has been removed from user 2</p>
+        <p><strong>Response Body Format: </strong></p>
+        <p><strong>Example: </strong></p>
+        <code class="code"></code>
+          {<br>
+            "_id": "63042df019706ddd090db11d",<br>
+            "Username": "Herb",<br>
+            "Password": "yty99",<br>
+            "Email": "hrby@gmail.com",<br>
+            "FavoriteMovies": []<br>
+        }
         <p><strong>Response Status Codes: </strong></p>
-        <p>201: generated text response</p>
-        <p>400: user not found</p>
+        <p>201: JSON object with updated user information</p>
+        <p>500: 'Error'</p>
     </div>
 
     <div class="delete_user">
       <h2>Delete a User</h2>
         <p><strong>Description: </strong>This endpoint removes a user.</p>
-        <p><strong>Endpoint URL: </strong>/users/:id</p>
+        <p><strong>Endpoint URL: </strong>/users/:Username</p>
         <p><strong>METHOD Type: </strong>DELETE</p>
-        <p><strong>Query Parameters: </strong>:id</p>
-        <p><strong>Example: </strong>/users/2/New%20Movie</p>
+        <p><strong>Query Parameters: </strong>:Username</p>
+        <p><strong>Example: </strong>/users/Herb</p>
         <p><strong>Request Body Format: </strong>None</p>
-        <p><strong>Response Body Format: </strong>Text with user id</p>
-        <p><strong>Example: </strong>user 3 has been deleted</p>
+        <p><strong>Response Body Format: text response</strong></p>
+        <p><strong>Example: </strong>Herb was deleted</p>
         <p><strong>Response Status Codes: </strong></p>
-        <p>201: generated text response</p>
-        <p>400: user not found</p>
+        <p>201: Text response (:Username was deleted)</p>
+        <p>400: Text response (:Username was not found)</p>
+        <p>500: 'Error'</p>
     </div>
 
   </body>
