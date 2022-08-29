@@ -1,20 +1,22 @@
+require('dotenv').config();
 const bodyParser = require('body-parser');
   express = require('express');
   morgan = require('morgan');
   uuid = require('uuid');
   app = express();
-  mongoose = require('mongoose');
-  Models = require('./models.js');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const mongoose = require('mongoose');
+    Models = require('./models.js');
 
 const { check, validationResult } = require('express-validator');
 
 const Movies = Models.Movie;
   Users = Models.User
 
-mongoose.connect('mongodb://localhost:27017/moviesDB', { useNewUrlParser: true, useUnifiedTopology: true });
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+mongoose.connect(process.env.DB_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const cors = require('cors');
 // Allow requests from all origins
@@ -23,6 +25,7 @@ app.use(cors());
 let auth = require('./auth.js')(app);
 
 const passport = require('passport');
+const { config } = require('dotenv');
 require('./passport.js');
 
 app.use(express.static('public'));
