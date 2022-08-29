@@ -25,7 +25,6 @@ app.use(cors());
 let auth = require('./auth.js')(app);
 
 const passport = require('passport');
-const { config } = require('dotenv');
 require('./passport.js');
 
 app.use(express.static('public'));
