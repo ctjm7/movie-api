@@ -25,6 +25,7 @@ app.use(cors());
 let auth = require('./auth.js')(app);
 
 const passport = require('passport');
+const { process_params } = require('express/lib/router/index.js');
 require('./passport.js');
 
 app.use(express.static('public'));
@@ -173,7 +174,8 @@ app.delete('/users/:Username', passport.authenticate('jwt', { session: false }),
 });
 
 // Get all movies
-app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+// app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.get('/movies', (req, res) => {
   Movies.find()
     .then((movies) => {
       res.status(201).json(movies);
