@@ -18,8 +18,6 @@ const Movies = Models.Movie;
 
 mongoose.connect(process.env.DB_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true });
 
-let allowedOrigins = ['http://localhost:8080', 'http://testsite.com', 'http://localhost:1234'];
-
 const cors = require('cors');
 // Allow requests from all origins
 app.use(cors());
