@@ -16,7 +16,7 @@ const { check, validationResult } = require('express-validator');
 const Movies = Models.Movie;
   Users = Models.User
 
-mongoose.connect(process.env.DB_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://Muser98:DBimake@moviesdb.e2abmls.mongodb.net/moviesDB?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const cors = require('cors');
 // Allow requests from all origins
